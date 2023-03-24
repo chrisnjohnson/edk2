@@ -16,20 +16,22 @@
   LIBRARY_CLASS   = GoogleTestLib|HOST_APPLICATION
 
 #
-#  VALID_ARCHITECTURES           = IA32 X64 ARM AARCH64
+#  VALID_ARCHITECTURES           = IA32 X64
 #
 
 [Sources]
   googletest/googletest/src/gtest-all.cc
+  googletest/googlemock/src/gmock-all.cc
 
 [Packages]
+  MdePkg/MdePkg.dec
   UnitTestFrameworkPkg/UnitTestFrameworkPkg.dec
 
 [BuildOptions]
   MSFT:*_*_*_CC_FLAGS     == /c /EHsc /Zi
   MSFT:NOOPT_*_*_CC_FLAGS =  /Od
 
-  GCC:*_*_*_CC_FLAGS     == -g -c
+  GCC:*_*_*_CC_FLAGS     == -g -c -fshort-wchar
 
   GCC:NOOPT_*_*_CC_FLAGS =  -O0
   GCC:*_*_IA32_CC_FLAGS  =  -m32
