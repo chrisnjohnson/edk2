@@ -32,6 +32,8 @@ class SetSecureBootModeTest : public Test {
     }
 };
 
+// Test SetSecureBootMode() API from SecureBootVariableLib to verify the
+// expected error is returned when the call to gRT->SetVariable() fails.
 TEST_F(SetSecureBootModeTest, SetVarError) {
   EXPECT_CALL(RtServicesMock, gRT_SetVariable)
     .WillOnce(Return(EFI_INVALID_PARAMETER));
@@ -40,6 +42,9 @@ TEST_F(SetSecureBootModeTest, SetVarError) {
   EXPECT_EQ(Status, EFI_INVALID_PARAMETER);
 }
 
+// Test SetSecureBootMode() API from SecureBootVariableLib to verify the
+// expected secure boot mode is written to the correct variable in the call
+// to gRT->SetVariable().
 TEST_F(SetSecureBootModeTest, PropogateModeToSetVar) {
   EXPECT_CALL(RtServicesMock,
     gRT_SetVariable(
@@ -68,6 +73,8 @@ class GetSetupModeTest : public Test {
     }
 };
 
+// Test GetSetupMode() API from SecureBootVariableLib to verify the expected
+// error is returned when the call to gRT->GetVariable() fails.
 TEST_F(GetSetupModeTest, GetVarError) {
   EXPECT_CALL(RtServicesMock, gRT_GetVariable)
     .WillOnce(Return(EFI_INVALID_PARAMETER));
@@ -76,6 +83,9 @@ TEST_F(GetSetupModeTest, GetVarError) {
   EXPECT_EQ(Status, EFI_INVALID_PARAMETER);
 }
 
+// Test GetSetupMode() API from SecureBootVariableLib to verify the expected
+// setup mode is returned (and with a success return code) when the mode is
+// successfully read from the call to gRT->GetVariable().
 TEST_F(GetSetupModeTest, FetchModeFromGetVar) {
   EXPECT_CALL(RtServicesMock,
     gRT_GetVariable(
@@ -101,6 +111,8 @@ class IsSecureBootEnabledTest : public Test {
     BOOLEAN     Enabled;
 };
 
+// Test IsSecureBootEnabled() API from SecureBootVariableLib to verify FALSE
+// is returned when the call to GetEfiGlobalVariable2() fails.
 TEST_F(IsSecureBootEnabledTest, GetVarError) {
   EXPECT_CALL(UefiLibMock, GetEfiGlobalVariable2)
     .WillOnce(Return(EFI_ABORTED));
@@ -120,6 +132,9 @@ class IsSecureBootEnabledAllocTest : public IsSecureBootEnabledTest {
     }
 };
 
+// Test IsSecureBootEnabled() API from SecureBootVariableLib to verify TRUE
+// is returned when the call to GetEfiGlobalVariable2() is successful and
+// returns SECURE_BOOT_MODE_ENABLE.
 TEST_F(IsSecureBootEnabledAllocTest, IsEnabled) {
   *BootEnabledBuffer = SECURE_BOOT_MODE_ENABLE;
   EXPECT_CALL(UefiLibMock,
@@ -135,6 +150,9 @@ TEST_F(IsSecureBootEnabledAllocTest, IsEnabled) {
   EXPECT_EQ(Enabled, TRUE);
 }
 
+// Test IsSecureBootEnabled() API from SecureBootVariableLib to verify FALSE
+// is returned when the call to GetEfiGlobalVariable2() is successful and
+// returns SECURE_BOOT_MODE_DISABLE.
 TEST_F(IsSecureBootEnabledAllocTest, IsDisabled) {
   *BootEnabledBuffer = SECURE_BOOT_MODE_DISABLE;
   EXPECT_CALL(UefiLibMock,
