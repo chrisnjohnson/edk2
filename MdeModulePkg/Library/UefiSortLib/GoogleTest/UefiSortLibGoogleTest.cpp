@@ -29,6 +29,8 @@ CompareUint32 (
   return 0;
 }
 
+// Test PerformQuickSort() API from UefiSortLib to verify a UINT32 array
+// with 9 elements in ascending order is sorted into descending order.
 TEST(PerformQuickSortTest, SortUint32AscendingArray_Size9) {
   CONST UINT32 ArraySize = 9;
   UINT32       BuffActual[ArraySize];
@@ -43,6 +45,8 @@ TEST(PerformQuickSortTest, SortUint32AscendingArray_Size9) {
   EXPECT_THAT(BuffActual, ElementsAreArray(BuffExpected, ArraySize));
 }
 
+// Test StringCompare() API from UefiSortLib to verify the comparison
+// succeeds when the same buffer is compared with itself.
 TEST(StringCompareTest, CompareSameBuffer) {
   INTN           RetVal;
   CONST CHAR16  *Buffer = (CHAR16*)L"abcdefg";
