@@ -436,18 +436,24 @@ interface declaration is also included in the code below for context.
 
 ```cpp
 struct MockUefiLib {
-  MOCK_INTERFACE_DECLARATION(MockUefiLib);
+  MOCK_INTERFACE_DECLARATION (MockUefiLib);
 
-  MOCK_FUNCTION_DECLARATION(EFI_STATUS, GetVariable2,
+  MOCK_FUNCTION_DECLARATION (
+    EFI_STATUS,
+    GetVariable2,
     (IN CONST CHAR16    *Name,
      IN CONST EFI_GUID  *Guid,
      OUT VOID           **Value,
-     OUT UINTN          *Size OPTIONAL));
+     OUT UINTN          *Size OPTIONAL)
+    );
 
-  MOCK_FUNCTION_DECLARATION(EFI_STATUS, GetEfiGlobalVariable2,
+  MOCK_FUNCTION_DECLARATION (
+    EFI_STATUS,
+    GetEfiGlobalVariable2,
     (IN CONST CHAR16  *Name,
      OUT VOID         **Value,
-     OUT UINTN        *Size OPTIONAL));
+     OUT UINTN        *Size OPTIONAL)
+    );
 };
 ```
 
@@ -582,9 +588,9 @@ below table.
 
 | Interface Type | Header File Location |
 | :--- | :--- |
-| Library | \<PackageName\>/Test/Mock/Include/Library/GoogleTest |
-| Global Table (e.g. gRT, gBS, etc.) | \<PackageName\>/Test/Mock/Include/Library/GoogleTest |
-| Protocol | \<PackageName\>/Test/Mock/Include/Protocol/GoogleTest |
+| Library | \<PackageName\>/Test/Mock/Include/GoogleTest/Library |
+| Global Table (e.g. gRT, gBS, etc.) | \<PackageName\>/Test/Mock/Include/GoogleTest/Library |
+| Protocol | \<PackageName\>/Test/Mock/Include/GoogleTest/Protocol |
 
 The below table shows examples for file locations with each of the above cases.
 
@@ -592,18 +598,19 @@ The below table shows examples for file locations with each of the above cases.
 | :--- | :--- | :--- |
 | Library | UefiLib | MdePkg/Test/Mock/Include/GoogleTest/Library/MockUefiLib.h |
 | Global Table (e.g. gRT, gBS, etc.) | UefiRuntimeServicesTableLib | MdePkg/Test/Mock/Include/GoogleTest/Library/MockUefiRuntimeServicesTableLib.h |
-| Protocol | EFI_USB_IO_PROTOCOL | MdePkg/Test/Mock/Include/Protocol/GoogleTest/MockEfiUsbIoProtocol.h |
+| Protocol | EFI_USB_IO_PROTOCOL | MdePkg/Test/Mock/Include/GoogleTest/Protocol/MockEfiUsbIoProtocol.h |
 
-Now that the file location is known, the contents can be added to it. At the top
-of the file, the `GoogleTestLib.h` and `FunctionMockLib.h` files are always added.
-Following these includes other EDK II related include files are added and must be
-wrapped in `extern "C" {}` because they are C include files. Failure to do this
-will cause link errors to occur. Note that a `#include` of the interface being
-mocked must also be added. This causes the declarations of the functions being
-mocked to be included in the compilation and allows the compilation to verify
-that the function signatures of the mock and design functions are identical.
+Now that the file location is known, the contents can be added to it. After the
+standard `#ifndef` for a header file is added at the top of the file, the
+`GoogleTestLib.h` and `FunctionMockLib.h` files are always added. Following these
+includes other EDK II related include files are added and must be wrapped in
+`extern "C" {}` because they are C include files. Failure to do this will cause
+link errors to occur. Note that a `#include` of the interface being mocked must
+also be added. This causes the declarations of the functions being mocked to be
+included in the compilation and allows the compilation to verify that the function
+signatures of the mock and design functions are identical.
 
-After the standard `#ifndef` for a header file is added, a `struct` is declared
+After all the needed includes have been added in the file , a `struct` is declared
 using the same name as the header file (which was determined using the rules
 above). Within this structure declaration a `MOCK_INTERFACE_DECLARATION` is
 added along with a `MOCK_FUNCTION_DECLARATION` (or a
@@ -614,6 +621,9 @@ only the `GetVariable2` and `GetEfiGlobalVariable2` declarations are included in
 the example.
 
 ```cpp
+#ifndef MOCK_UEFI_LIB_H_
+#define MOCK_UEFI_LIB_H_
+
 #include <Library/GoogleTestLib.h>
 #include <Library/FunctionMockLib.h>
 extern "C" {
@@ -621,22 +631,25 @@ extern "C" {
   #include <Library/UefiLib.h>
 }
 
-#ifndef MOCK_UEFI_LIB_H
-#define MOCK_UEFI_LIB_H
-
 struct MockUefiLib {
-  MOCK_INTERFACE_DECLARATION(MockUefiLib);
+  MOCK_INTERFACE_DECLARATION (MockUefiLib);
 
-  MOCK_FUNCTION_DECLARATION(EFI_STATUS, GetVariable2,
+  MOCK_FUNCTION_DECLARATION (
+    EFI_STATUS,
+    GetVariable2,
     (IN CONST CHAR16    *Name,
      IN CONST EFI_GUID  *Guid,
      OUT VOID           **Value,
-     OUT UINTN          *Size OPTIONAL));
+     OUT UINTN          *Size OPTIONAL)
+    );
 
-  MOCK_FUNCTION_DECLARATION(EFI_STATUS, GetEfiGlobalVariable2,
+  MOCK_FUNCTION_DECLARATION (
+    EFI_STATUS,
+    GetEfiGlobalVariable2,
     (IN CONST CHAR16  *Name,
      OUT VOID         **Value,
-     OUT UINTN        *Size OPTIONAL));
+     OUT UINTN        *Size OPTIONAL)
+    );
 };
 
 #endif
@@ -814,16 +827,14 @@ the same as the mock function definitions file, but uses the `.inf` extension
 rather than `.cpp`.
 
 Within the `.inf` file the `BASE_NAME` should be set to the same name as the
-file (minus the extension), the `MODULE_TYPE` should be set to `BASE`, and the
-`LIBRARY_CLASS` should be the same as the `BASE_NAME` but without the `Mock`
-prefix. Additionally, the `LIBRARY_CLASS` should be specified to only support
-the `HOST_APPLICATION` module type since these mock function definitions will
-only be compiled into host application test applications.
+file (minus the extension), the `MODULE_TYPE` should be set to
+`HOST_APPLICATION`, and the `LIBRARY_CLASS` should be the same as the
+`BASE_NAME` but without the `Mock` prefix.
 
 The `[Sources]` section will contain the single mock function definition
 source file, the `[Packages]` section will contain all the necessary DEC
 files to compile the mock functions (which at a minimum will include the
-`UnitTestFrameworkPkg.dec` file, the `[LibraryClasses]` section will contain
+`UnitTestFrameworkPkg.dec` file), the `[LibraryClasses]` section will contain
 the `GoogleTestLib`, and the `[BuildOptions]` will need to append the `/EHsc`
 compilation flag to all MSFT builds to enable proper use of the C++ exception
 handler. Below is the complete `MockUefiLib.inf` as an example.
@@ -833,9 +844,9 @@ handler. Below is the complete `MockUefiLib.inf` as an example.
   INF_VERSION                    = 0x00010005
   BASE_NAME                      = MockUefiLib
   FILE_GUID                      = 47211F7A-6D90-4DFB-BDF9-610B69197C2E
-  MODULE_TYPE                    = BASE
+  MODULE_TYPE                    = HOST_APPLICATION
   VERSION_STRING                 = 1.0
-  LIBRARY_CLASS                  = UefiLib|HOST_APPLICATION
+  LIBRARY_CLASS                  = UefiLib
 
 #
 # The following information is for reference only and not required by the build tools.
@@ -855,7 +866,6 @@ handler. Below is the complete `MockUefiLib.inf` as an example.
 
 [BuildOptions]
   MSFT:*_*_*_CC_FLAGS = /EHsc
-
 ```
 
 To ensure that this specific set of mock functions are always buildable even
@@ -1493,7 +1503,7 @@ This mode is used by the test running plugin to aggregate the results for CI tes
 
 Host based Unit Tests will automatically enable coverage data.
 
-For Windows, This is primarily leverage for pipeline builds, but this can be leveraged locally using the
+For Windows, this is primarily leveraged for pipeline builds, but this can be leveraged locally using the
 OpenCppCoverage windows tool to parse coverage data to cobertura xml format.
 
 - Windows Prerequisite
@@ -1513,7 +1523,7 @@ OpenCppCoverage windows tool to parse coverage data to cobertura xml format.
     ```
 
 
-For Linux, This is primarily leveraged for pipeline builds, but this can be leveraged locally using the
+For Linux, this is primarily leveraged for pipeline builds, but this can be leveraged locally using the
 lcov linux tool, and parsed using the lcov_cobertura python tool to parse it to cobertura xml format.
 
 - Linux Prerequisite
@@ -1561,7 +1571,7 @@ We will continue trying to make these as similar as possible.
 Code/Test                                   | Location
 ---------                                   | --------
 Host-Based Unit Tests for a Library/Protocol/PPI/GUID Interface   | If what's being tested is an interface (e.g. a library with a public header file, like DebugLib) and the test is agnostic to a specific implementation, then the test should be scoped to the parent package.<br/>Example: `MdePkg/Test/UnitTest/[Library/Protocol/Ppi/Guid]/`<br/><br/>A real-world example of this is the BaseSafeIntLib test in MdePkg.<br/>`MdePkg/Test/UnitTest/Library/BaseSafeIntLib/TestBaseSafeIntLibHost.inf`
-Host-Based Unit Tests for a Library/Driver (PEI/DXE/SMM) implementation   | If what's being tested is a specific implementation (e.g. BaseDebugLibSerialPort for DebugLib), then the test should be scoped to the implementation directory itself, in a UnitTest (or GoogleTest) subdirectory.<br/><br/>Module Example: `MdeModulePkg/Universal/EsrtFmpDxe/UnitTest/`<br/>Library Example: `MdePkg/Library/BaseMemoryLib/UnitTest/`<br/>Library Example (GoogleTest): `SecurityPkg/Library/SecureBootVariableLib/GoogleTest`
+Host-Based Unit Tests for a Library/Driver (PEI/DXE/SMM) implementation   | If what's being tested is a specific implementation (e.g. BaseDebugLibSerialPort for DebugLib), then the test should be scoped to the implementation directory itself, in a UnitTest (or GoogleTest) subdirectory.<br/><br/>Module Example: `MdeModulePkg/Universal/EsrtFmpDxe/UnitTest/`<br/>Library Example: `MdePkg/Library/BaseMemoryLib/UnitTest/`<br/>Library Example (GoogleTest): `SecurityPkg/Library/SecureBootVariableLib/GoogleTest/`
 Host-Based Tests for a Functionality or Feature   | If you're writing a functional test that operates at the module level (i.e. if it's more than a single file or library), the test should be located in the package-level Tests directory under the HostFuncTest subdirectory.<br/>For example, if you were writing a test for the entire FMP Device Framework, you might put your test in:<br/>`FmpDevicePkg/Test/HostFuncTest/FmpDeviceFramework`<br/><br/>If the feature spans multiple packages, it's location should be determined by the package owners related to the feature.
 Non-Host-Based (PEI/DXE/SMM/Shell) Tests for a Functionality or Feature   | Similar to Host-Based, if the feature is in one package, should be located in the `*Pkg/Test/[Shell/Dxe/Smm/Pei]Test` directory.<br/><br/>If the feature spans multiple packages, it's location should be determined by the package owners related to the feature.<br/><br/>USAGE EXAMPLES<br/>PEI Example: MP_SERVICE_PPI. Or check MTRR configuration in a notification function.<br/> SMM Example: a test in a protocol callback function. (It is different with the solution that SmmAgent+ShellApp)<br/>DXE Example: a test in a UEFI event call back to check SPI/SMRAM status. <br/> Shell Example: the SMM handler audit test has a shell-based app that interacts with an SMM handler to get information. The SMM paging audit test gathers information about both DXE and SMM. And the SMM paging functional test actually forces errors into SMM via a DXE driver.
 
